@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Necip Ali Nizamettinoğlu A.L. - Yönetici Paneli</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --navy: #062135;
+      --navy-light: #0d3859;
+      --gold: #D8B96C;
+      --gold-hover: #c4a457;
+      --red: #ef4444;
+      --bg: #f4f6fa;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #10b981;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
+
+    /* 🔒 BULANIK ŞİFRE GİRİŞ EKRANI */
+    #authOverlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 33, 53, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+      transition: all 0.4s ease;
+    }
+
+    .auth-card {
+      background: #ffffff;
+      width: 100%;
+      max-width: 440px;
+      padding: 36px 30px;
+      border-radius: 24px;
+      box-shadow: 0 25px 50px -12px rgba(6, 33, 53, 0.4);
+      text-align: center;
+      border: 1px solid rgba(216, 185, 108, 0.5);
+    }
+
+    .auth-badge {
+      width: 68px;
+      height: 68px;
+      background: #062135;
+      border: 3px solid var(--gold);
+      border-radius: 20px;
+      margin: 0 auto 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+    }
+
+    .auth-card h2 { color: var(--navy); font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+    .auth-card p { color: var(--text-muted); font-size: 13.5px; margin-bottom: 22px; }
+
+    .input-group { position: relative; margin-bottom: 16px; }
+    .auth-input {
+      width: 100%;
+      padding: 14px 44px 14px 16px;
+      border-radius: 12px;
+      border: 2px solid var(--border);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .auth-input:focus { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(6, 33, 53, 0.08); }
+
+    .toggle-pass {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+      opacity: 0.6;
+    }
+
+    .btn-login {
+      width: 100%;
+      background: var(--navy);
+      color: #ffffff;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-login:hover { background: var(--navy-light); transform: translateY(-1px); }
+
+    .auth-error { color: var(--red); font-size: 13px; font-weight: 600; margin-top: 12px; display: none; }
+
+    /* SALLANMA (SHAKE) ANİMASYONU */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      15%, 45%, 75% { transform: translateX(-12px); }
+      30%, 60%, 90% { transform: translateX(12px); }
+    }
+    .shake {
+      animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+      border-color: var(--red) !important;
+    }
+
+    /* ÜST BAR VE TABLO */
+    header { background: var(--navy); color: #fff; padding: 18px 32px; box-shadow: 0 4px 20px rgba(6, 33, 53, 0.15); position: sticky; top: 0; z-index: 100; }
+    .header-content { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand-icon { background: var(--gold); color: var(--navy); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; }
+    .brand-text h1 { font-size: 17px; font-weight: 800; color: #ffffff; }
+    .brand-text p { font-size: 12.5px; color: var(--gold); font-weight: 600; letter-spacing: 1.5px; margin-top: 2px; }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 10px; font-size: 13.5px; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; }
+    .btn-gold { background: var(--gold); color: var(--navy); }
+    .btn-gold:hover { background: var(--gold-hover); transform: translateY(-1px); }
+    .btn-outline { background: transparent; border: 1px solid rgba(255, 255, 255, 0.25); color: #fff; }
+    .btn-outline:hover { background: rgba(255, 255, 255, 0.1); }
+    .btn-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); }
+    .btn-danger:hover { background: rgba(239, 68, 68, 0.4); color: #fff; }
+
+    main { max-width: 1200px; margin: 28px auto; padding: 0 20px; width: 100%; flex: 1; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); border-radius: 16px; padding: 20px 24px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .stat-label { font-size: 12.5px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .stat-value { font-size: 26px; font-weight: 800; color: var(--navy); }
+    .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+    .panel-card { background: var(--card-bg); border-radius: 18px; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.03); overflow: hidden; }
+    .card-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
+    .card-title { font-size: 17px; font-weight: 800; color: var(--navy); }
+    .search-input { padding: 9px 16px; border-radius: 10px; border: 1px solid var(--border); font-size: 14px; outline: none; min-width: 260px; font-family: inherit; }
+
+    .table-container { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #f8fafc; color: var(--text-muted); font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 14px 24px; border-bottom: 1px solid var(--border); }
+    td { padding: 16px 24px; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+    tr:hover td { background: #f8fafc; }
+    .badge-index { background: #e2e8f0; color: var(--navy); font-weight: 700; padding: 4px 10px; border-radius: 8px; font-size: 12px; }
+    .msg-time { color: var(--text-muted); font-size: 13px; font-weight: 600; white-space: nowrap; }
+    .msg-text { color: var(--text-main); font-size: 15px; line-height: 1.6; font-weight: 500; white-space: pre-line; }
+    .empty-state { padding: 60px 20px; text-align: center; color: var(--text-muted); }
+    .pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--success); margin-right: 6px; }
+    footer { text-align: center; padding: 24px; color: var(--text-muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+
+  <!-- 🔒 KİLİT EKRANI -->
+  <div id="authOverlay">
+    <div class="auth-card" id="authBox">
+      <div class="auth-badge">🔒</div>
+      <h2>Yönetici Girişi</h2>
+      <p>Necip Ali Nizamettinoğlu A.L. Bildirim Sistemi</p>
+      
+      <div class="input-group">
+        <input type="password" id="passInput" class="auth-input" placeholder="Panel şifresini girin..." autofocus onkeydown="checkKey(event)">
+        <span class="toggle-pass" onclick="togglePasswordVisibility()">👁️</span>
+      </div>
+
+      <button class="btn-login" onclick="verifyPassword()">
+        Giriş Yap ➔
+      </button>
+
+      <div class="auth-error" id="authError">
+        ⚠️ Hatalı şifre girdiniz! Lütfen tekrar deneyin.
+      </div>
+    </div>
+  </div>
+
+  <!-- 🏫 YÖNETİCİ PANELİ -->
+  <header>
+    <div class="header-content">
+      <div class="brand">
+        <div class="brand-icon">🏫</div>
+        <div class="brand-text">
+          <h1>NECİP ALİ NİZAMETTİNOĞLU ANADOLU LİSESİ</h1>
+          <p>YÖNETİCİ VE MESAJ TAKİP PANELİ</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="exportToCSV()">📊 Excel (CSV) İndir</button>
+        <button class="btn btn-gold" id="refreshBtn" onclick="loadMessages()">🔄 Yenile</button>
+        <button class="btn btn-danger" onclick="lockPanel()">🔒 Çıkış</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">TOPLAM MESAJ SAYISI</div>
+          <div class="stat-value" id="totalMsgCount">0</div>
+        </div>
+        <div class="stat-icon" style="background: rgba(216, 185, 108, 0.2);">📬</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">SİSTEM DURUMU</div>
+          <div class="stat-value" style="font-size: 17px; color: var(--success);"><span class="pulse"></span> Canlı Bağlı</div>
+        </div>
+        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: var(--success);">⚡</div>
+      </div>
+      <div class="stat-card">
+        <div>
+          <div class="stat-label">SON GÜNCELLEME</div>
+          <div class="stat-value" id="lastUpdated" style="font-size: 18px;">--:--:--</div>
+        </div>
+        <div class="stat-icon" style="background: rgba(6, 33, 53, 0.08);">🕒</div>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <div class="card-header">
+        <div class="card-title">Gelen Görüş ve Bildirimler</div>
+        <input type="text" id="searchInput" class="search-input" placeholder="Mesajlarda ara..." oninput="filterMessages()">
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 70px;">#</th>
+              <th style="width: 180px;">Tarih / Saat</th>
+              <th>Mesaj İçeriği</th>
+            </tr>
+          </thead>
+          <tbody id="messagesTbody">
+            <tr><td colspan="3" class="empty-state"><p>Mesajlar yükleniyor...</p></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Necip Ali Nizamettinoğlu Anadolu Lisesi &bull; Canlı Yönetici Bildirim Sistemi &bull; 2026
+  </footer>
+
+  <script>
+    const SECRET_KEY = "Ecrinusaybin20112026";
+    const API_URL = "https://script.google.com/macros/s/AKfycbwoxp-iBVkZKhwH4ARoavaX_5PWYYYEEV1bCNdz6ViDkaPQZPTyUrEFhGDylkfEbaVf1A/exec";
+    
+    let allMessages = [];
+    let refreshInterval = null;
+
+    function checkKey(e) { if (e.key === "Enter") verifyPassword(); }
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById("passInput");
+      input.type = input.type === "password" ? "text" : "password";
+    }
+
+    function verifyPassword() {
+      const input = document.getElementById("passInput");
+      const box = document.getElementById("authBox");
+      const errorText = document.getElementById("authError");
+
+      if (input.value === SECRET_KEY) {
+        errorText.style.display = "none";
+        document.getElementById("authOverlay").style.opacity = "0";
+        setTimeout(() => {
+          document.getElementById("authOverlay").style.display = "none";
+        }, 400);
+
+        loadMessages();
+        refreshInterval = setInterval(loadMessages, 15000);
+      } else {
+        box.classList.remove("shake");
+        void box.offsetWidth;
+        box.classList.add("shake");
+        input.value = "";
+        input.focus();
+        errorText.style.display = "block";
+      }
+    }
+
+    function lockPanel() {
+      if (refreshInterval) clearInterval(refreshInterval);
+      document.getElementById("passInput").value = "";
+      document.getElementById("authError").style.display = "none";
+      const overlay = document.getElementById("authOverlay");
+      overlay.style.display = "flex";
+      setTimeout(() => { overlay.style.opacity = "1"; }, 10);
+      document.getElementById("messagesTbody").innerHTML = `
+        <tr><td colspan="3" class="empty-state"><p>Panel kilitli.</p></td></tr>
+      `;
+    }
+
+    // DOĞRUDAN FETCH İLE GOOGLE'DAN ÇEKME (TAM UYUMLU)
+    async function loadMessages() {
+      const tbody = document.getElementById('messagesTbody');
+      
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        allMessages = Array.isArray(data) ? data.reverse() : [];
+        document.getElementById('totalMsgCount').innerText = allMessages.length;
+        
+        const now = new Date();
+        document.getElementById('lastUpdated').innerText = 
+          now.getHours().toString().padStart(2, '0') + ':' + 
+          now.getMinutes().toString().padStart(2, '0') + ':' + 
+          now.getSeconds().toString().padStart(2, '0');
+
+        renderTable(allMessages);
+      } catch (err) {
+        console.error("Yükleme hatası:", err);
+        tbody.innerHTML = `
+          <tr><td colspan="3" class="empty-state" style="color: #ef4444;">
+            ⚠️ Mesajlar yüklenirken bir sorun oluştu. Lütfen bağlantınızı kontrol edip tekrar deneyin.
+          </td></tr>
+        `;
+      }
+    }
+
+    function formatDate(rawDate) {
+      if (!rawDate) return '-';
+      try {
+        const d = new Date(rawDate);
+        if (isNaN(d.getTime())) return rawDate;
+        return d.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + 
+               d.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+      } catch (e) {
+        return rawDate;
+      }
+    }
+
+    function renderTable(list) {
+      const tbody = document.getElementById('messagesTbody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="empty-state"><p>Henüz iletilen bir mesaj bulunmuyor.</p></td></tr>`;
+        return;
+      }
+      let html = '';
+      list.forEach((item, index) => {
+        html += `
+          <tr>
+            <td><span class="badge-index">#${list.length - index}</span></td>
+            <td><span class="msg-time">${formatDate(item.tarih)}</span></td>
+            <td><div class="msg-text">${escapeHtml(item.mesaj || '')}</div></td>
+          </tr>
+        `;
+      });
+      tbody.innerHTML = html;
+    }
+
+    function filterMessages() {
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
+      if (!q) { renderTable(allMessages); return; }
+      const filtered = allMessages.filter(m => 
+        (m.mesaj && m.mesaj.toLowerCase().includes(q)) || 
+        (m.tarih && m.tarih.toLowerCase().includes(q))
+      );
+      renderTable(filtered);
+    }
+
+    function exportToCSV() {
+      if (allMessages.length === 0) { alert("İndirilecek mesaj yok!"); return; }
+      let csv = "data:text/csv;charset=utf-8,\uFEFFTarih ve Saat;Gelen Mesaj\n";
+      allMessages.forEach(m => {
+        csv += `"${formatDate(m.tarih)}";"${(m.mesaj || '').replace(/"/g, '""')}"\n`;
+      });
+      const link = document.createElement("a");
+      link.href = encodeURI(csv);
+      link.download = `Okul_Mesajlari_${new Date().toISOString().slice(0,10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.innerText = text;
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>
